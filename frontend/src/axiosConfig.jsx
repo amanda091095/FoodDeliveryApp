@@ -1,9 +1,21 @@
+// src/axiosConfig.js
 import axios from 'axios';
 
-const axiosInstance = axios.create({
-  baseURL: 'http://localhost:5001', // local
-  //baseURL: 'http://3.26.96.188:5001', // live
+const api = axios.create({
+  baseURL: process.env.REACT_APP_API_URL || 'http://localhost:5001/api',
   headers: { 'Content-Type': 'application/json' },
 });
 
-export default axiosInstance;
+const getToken = () =>
+  localStorage.getItem('fd_token') ||
+  localStorage.getItem('token') ||
+  sessionStorage.getItem('fd_token');
+
+api.interceptors.request.use((config) => {
+  const t = getToken();
+  console.log('attach auth?', !!t, config.method?.toUpperCase(), config.url); // debug
+  if (t) config.headers.Authorization = `Bearer ${t}`;
+  return config;
+});
+
+export default api;
