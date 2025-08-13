@@ -26,7 +26,7 @@ function chipStyle(status) {
 }
 
 export default function MyOrders() {
-  const { token } = useAuth();
+  useAuth();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
 
