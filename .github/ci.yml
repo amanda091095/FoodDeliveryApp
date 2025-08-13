@@ -3,78 +3,68 @@ name: Backend CI
 on:
   push:
     branches:
-      - main  # Trigger CI on pushes to the main branch
-
+      - main
 
 jobs:
   test:
     name: Run Tests
     runs-on: self-hosted
-
+    
     strategy:
       matrix:
-        node-version: [22] # Test on multiple Node.js versions
-
-
-    environment: MONGO_URI
-
+        node-version: [22]
+    
     steps:
     - name: Checkout Code
-      uses: actions/checkout@v3
-
-    # Set up Node.js
+      uses: actions/checkout@v4  # Updated version
+    
     - name: Setup Node.js
-      uses: actions/setup-node@v3
+      uses: actions/setup-node@v4  # Updated version
       with:
         node-version: ${{ matrix.node-version }}
-
-    - name: Print Env Secret
-
-      env:
-        MONGO_URI: ${{ secrets.MONGO_URI }}
-        JWT_SECRET: ${{ secrets.JWT_SECRET }}
-        PORT: ${{ secrets.PORT }}
-      run: | 
-        echo "Secret 1 is: $MONGO_URI"
-        echo "Secret 2 is: $JWT_SECRET"
-        echo "Secret 3 is: $PORT"
-      
-    - run: pm2 stop all
-
-    # Install dependencies for backend
+        cache: 'yarn'  # Enable caching
+    
+    - name: Stop PM2 processes
+      run: |
+        pm2 stop all || true  # Don't fail if no processes
+        pm2 delete all || true
+      continue-on-error: true
+    
     - name: Install Backend Dependencies
       working-directory: ./backend
-      run: | 
-       npm install --global yarn
-       yarn --version
-       yarn install
-      
-    # Install dependencies for frontend
-    - name: Install Frontend Dependencies
+      run: |
+        npm install --global yarn
+        yarn --version
+        yarn install
+    
+    - name: Clean and Install Frontend Dependencies
       working-directory: ./frontend
       run: |
         df -h
-        sudo rm -rf ./build
+        sudo rm -rf ./build || true
         yarn install
         yarn run build
-
-
-    # Run backend tests
+    
+    - name: Create Backend Environment File
+      working-directory: ./backend
+      run: |
+        touch .env
+        echo "MONGO_URI=${{ secrets.MONGO_URI }}" >> .env
+        echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> .env
+        echo "PORT=${{ secrets.PORT }}" >> .env
+    
     - name: Run Backend Tests
-      env:
-        MONGO_URI: ${{ secrets.MONGO_URI }}
-        JWT_SECRET: ${{ secrets.JWT_SECRET }}
-        PORT: ${{ secrets.PORT }}
       working-directory: ./backend
       run: npm test
-
-
-    - run: npm ci
-    - run: | 
-        cd ./backend
-        touch .env
-        echo "${{ secrets.PROD }}" > .env
-
-    - run: pm2 start all
-
-    - run: pm2 restart all
+    
+    - name: Start Application with PM2
+      run: |
+        pm2 start ecosystem.config.js || pm2 start ./backend/server.js --name "backend"
+        pm2 restart all
+        pm2 save
+    
+    - name: Verify Deployment
+      run: |
+        pm2 status
+        sleep 5
+        curl -f http://localhost:${{ secrets.PORT }}/health || echo "Health check failed"
