@@ -31,7 +31,7 @@ The app allows users to browse restaurants, view menus, place orders, and manage
 
 ---
 ### Demo Account for testing 
-- Please use the following credentials to log in for testing:  
+Please use the following credentials to log in for testing:  
 - Email:IFN636@gmail.com
 - Password: 0000
 ---
