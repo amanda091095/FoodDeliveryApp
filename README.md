@@ -5,7 +5,7 @@ The Food Delivery App is a full-stack web application designed to provide users 
 It features a **React frontend** and a **Node.js/Express backend** connected to a MongoDB database.  
 The app allows users to browse restaurants, view menus, place orders, and manage menu items, and orders.
 
-**Deployed App:** [http://3.27.194.18](http://3.27.194.18)  
+**Deployed App:** [http://13.210.90.235](http://13.210.90.235)  
 
 ---
 
