@@ -19,7 +19,6 @@ The app allows users to browse restaurants, view menus, place orders, and manage
 - Change the number of orders
 - View past orders
 - Logout securely
-
 ---
 
 ## Tech Stack
